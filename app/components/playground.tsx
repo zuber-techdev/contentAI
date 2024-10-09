@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import CheckoutButton from "@/components/ui/CheckoutButton";
 import {
   Select,
   SelectContent,
@@ -35,6 +36,8 @@ import { authFetch } from "../utils/authFetch";
 import { getRelativeTime } from "../utils/dateUtils";
 
 type TabTypes = "generate" | "posts" | "settings";
+
+const stripePublicKey = "price_1Q7AktG8swv4YdckPdweLEZB";
 
 type Post = {
   id: string;
@@ -449,6 +452,7 @@ export default function Playground() {
             {user?.name}
           </h2>
         </div>
+        <CheckoutButton priceId={stripePublicKey}></CheckoutButton>
         <nav className="p-4">
           <Button
             variant={activeTab === "generate" ? "default" : "ghost"}
