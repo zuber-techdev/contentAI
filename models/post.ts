@@ -6,7 +6,9 @@ export interface IPost extends Document {
   topic: string;
   industry: string;
   tone: string;
+  scheduleDate: Date;
   platform: string;
+  isCanceled: boolean;
 }
 
 const postSchema: Schema<IPost> = new mongoose.Schema(
@@ -33,6 +35,15 @@ const postSchema: Schema<IPost> = new mongoose.Schema(
     platform: {
       type: String,
     },
+    scheduleDate: {
+      type: Date,
+      required: true,
+    },
+    isCanceled: {
+      type: Boolean,
+      default: false,
+      required: true,
+    }
   },
   { timestamps: true }
 );

@@ -14,6 +14,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await authenticate(generatePostTopicsHandler)(req, res);
   } else if (req.method === 'GET' && action === 'get-custom-topics') { 
     await authenticate(getPostTopicsHandler)(req, res);
+  }else if (req.method === 'PUT' && action === 'cancel-post-schedule') { 
+    await authenticate(getPostTopicsHandler)(req, res);
   } else {
     res.setHeader('Allow', ['GET']);
     res.status(405).json({ message: `Method ${req.method} Not Allowed or Invalid Action` });

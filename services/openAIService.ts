@@ -46,14 +46,14 @@ export async function generateDigitalPersona(queryPrompt: any[]) {
   }
 }
 
-export async function generatePost(userId:string, topic: string, industry: string, tone: string, platform: string) {
+export async function generatePost(userId:string, topic: string, industry: string, tone: string, platform: string, noOfPosts: number) {
 	try {
 	  const persona:any = await DigitalPersona.findOne({ userId });
 	  let userQuery: string;
 	  if(industry != "" && tone != "" && platform != ""){
-		userQuery = `Create a ${tone} social media post about ${topic} for the ${industry} industry, tailored for ${platform}. Ensure the content is engaging, emojis, and follows best practices for the platform.The content should not include any bold headings or start with ** and must utilize all the tokens.`
+		userQuery = `Create ${noOfPosts} in ${tone} social media post about ${topic} for the ${industry} industry, tailored for ${platform}. Ensure the content is engaging, emojis, and follows best practices for the platform.The content should not include any bold headings or start with ** and must utilize all the tokens. Return data in json array of objects. Objects will be the posts.`
 	  }else{
-		userQuery = `Create a social media post about ${topic}. Ensure the content is engaging, emojis, and follows best practices for the platform.The content should not include any bold headings or start with ** and must utilize all the tokens.`
+		userQuery = `Create ${noOfPosts} post about ${topic}. Ensure the content is engaging, emojis, and follows best practices for the platform.The content should not include any bold headings or start with ** and must utilize all the tokens. Return data in json array of objects. Objects will be the posts.`
 	  }
 	  const response = await openai.chat.completions.create({
 		model: 'gpt-4o-mini',
@@ -68,6 +68,7 @@ export async function generatePost(userId:string, topic: string, industry: strin
 		  },
 		],
 		max_tokens: 4096,
+		temperature: 0.65
 	  });
 	  const text: any = response.choices[0].message?.content;
 	  const tokenizer = tiktoken.encoding_for_model('gpt-4o-mini');
