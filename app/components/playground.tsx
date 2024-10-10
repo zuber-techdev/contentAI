@@ -8,8 +8,7 @@ import {
   LogOut,
   Loader2,
   Settings,
-  Trash2,
-  Copy,
+  CalendarIcon,
 } from "lucide-react";
 import { useAuth } from "../contexts/auth-context";
 import { authFetch } from "../utils/authFetch";
@@ -18,8 +17,9 @@ import ProfileSettings from "./profile-settings";
 import GeneratePost from "./generate-post";
 import PostsList from "./posts-list";
 import { toast } from "@/hooks/use-toast";
+import ContentCalendar from "./content-calendar";
 
-type TabTypes = "generate" | "posts" | "settings";
+type TabTypes = "generate" | "posts" | "settings" | "calendar";
 
 export type Post = {
   id: string;
@@ -30,6 +30,13 @@ export type Post = {
   tone: string;
   platform: string;
   createdAt: string;
+  scheduledAt?: string;
+};
+
+export type ScheduledPost = {
+  id: string;
+  content: string;
+  date: string;
 };
 
 export default function Playground() {
@@ -39,55 +46,18 @@ export default function Playground() {
   const [topics, setTopics] = useState<string[]>([]);
   const [persona, setPersona] = useState("");
   const [activeTab, setActiveTab] = useState<TabTypes>("generate");
-  const [editingPostId, setEditingPostId] = useState<string | null>(null);
-
-  const { user, logout } = useAuth();
+  const [scheduledPosts, setScheduledPosts] = useState<ScheduledPost[]>([
+    { id: "1", content: "Post about AI", date: "2024-10-15" },
+    { id: "2", content: "UX design trends", date: "2024-10-20" },
+    { id: "3", content: "Machine learning basics", date: "2024-10-25" },
+  ]);
+  const { user, logout, updateUserProfileImage, updateUserToken } = useAuth();
 
   useEffect(() => {
     if (posts.length === 0) fetchPosts();
     if (topics.length === 0) fetchTopics();
     if (persona.length === 0) fetchPersona();
   }, []);
-
-  const fetchPosts = async () => {
-    try {
-      const response = await authFetch("/api/posts");
-      if (!response.ok) {
-        throw new Error("Failed to fetch posts");
-      }
-      const data = await response.json();
-      setPosts(
-        data.map(
-          ({
-            _id,
-            userId,
-            content,
-            topic,
-            industry,
-            tone,
-            platform,
-            createdAt,
-          }) => ({
-            id: _id,
-            userId,
-            content,
-            topic,
-            industry,
-            tone,
-            platform,
-            createdAt,
-          })
-        )
-      );
-    } catch (err) {
-      setError(
-        "An error occurred while fetching questions. Please try again later."
-      );
-      console.error("Error fetching posts", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const fetchTopics = async () => {
     try {
@@ -102,24 +72,6 @@ export default function Playground() {
         "An error occurred while fetching questions. Please try again later."
       );
       console.error("Error fetching posts", err);
-    }
-  };
-
-  const fetchPersona = async () => {
-    try {
-      const response = await authFetch("/api/digital-persona");
-      if (!response.ok) {
-        throw new Error("Error fetching persona details");
-      }
-      const personaDetails = await response.json();
-      setPersona(personaDetails.personaData);
-    } catch (err) {
-      console.error("Error fetching persona details", err);
-      toast({
-        title: "Error",
-        description: "Failed to fetch persona details. Please try again.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -151,7 +103,8 @@ export default function Playground() {
         body: JSON.stringify(requestBody),
       });
       if (!response.ok) {
-        throw new Error("Failed to generate post");
+        const error = await response.json();
+        throw new Error(error.message);
       }
       const data = await response.json();
       return data.post;
@@ -159,7 +112,7 @@ export default function Playground() {
       console.error("Error generating post: ", err);
       toast({
         title: "Error",
-        description: "Failed to generate post. Please try again.",
+        description: `${err}. Failed to generate post. Please try again.`,
         variant: "destructive",
       });
     }
@@ -214,7 +167,47 @@ export default function Playground() {
     }
   };
 
-  const handleUpdatePost = async (requestBody: any) => {
+  const fetchPosts = async () => {
+    try {
+      const response = await authFetch("/api/posts");
+      if (!response.ok) {
+        throw new Error("Failed to fetch posts");
+      }
+      const data = await response.json();
+      setPosts(
+        data.map(
+          ({
+            _id,
+            userId,
+            content,
+            topic,
+            industry,
+            tone,
+            platform,
+            createdAt,
+          }) => ({
+            id: _id,
+            userId,
+            content,
+            topic,
+            industry,
+            tone,
+            platform,
+            createdAt,
+          })
+        )
+      );
+    } catch (err) {
+      setError(
+        "An error occurred while fetching questions. Please try again later."
+      );
+      console.error("Error fetching posts", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdatePost = async (requestBody: any, editingPostId: string) => {
     try {
       const response = await authFetch(`/api/posts/${editingPostId}`, {
         method: "PUT",
@@ -282,6 +275,24 @@ export default function Playground() {
     }
   };
 
+  const fetchPersona = async () => {
+    try {
+      const response = await authFetch("/api/digital-persona");
+      if (!response.ok) {
+        throw new Error("Error fetching persona details");
+      }
+      const personaDetails = await response.json();
+      setPersona(personaDetails.personaData);
+    } catch (err) {
+      console.error("Error fetching persona details", err);
+      toast({
+        title: "Error",
+        description: "Failed to fetch persona details. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleSavePersona = async (personaString: string) => {
     try {
       const response = await authFetch("/api/digital-persona", {
@@ -319,25 +330,31 @@ export default function Playground() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to update profile");
+        const error = await response.json();
+        throw new Error(error.message);
       }
 
       const data = await response.json();
-      localStorage.setItem("authToken", data.token);
-      if (data.profileImage && data.profileImage.length > 0)
-        localStorage.setItem("profileImage", data.profileImage);
+      updateUserToken(data.token);
+      updateUserProfileImage(data.profileImage);
       toast({
         title: "Profile updated",
         description: "Your profile has been successfully updated.",
       });
+      return { status: "success", data };
     } catch (err) {
       console.error("Error updating profile:", err);
       toast({
         title: "Error",
-        description: "Failed to update profile. Please try again.",
+        description: err + ". Failed to update profile. Please try again.",
         variant: "destructive",
       });
+      return { status: "failure", data: err };
     }
+  };
+
+  const handleSchedulePost = async (newPost: ScheduledPost) => {
+    setScheduledPosts([...scheduledPosts, newPost]);
   };
 
   if (isLoading) {
@@ -364,7 +381,7 @@ export default function Playground() {
         <div className="p-4 border-b">
           <h2 className="text-xl font-semibold flex items-center">
             <span className="w-8 h-8 bg-pink-500 rounded-md mr-2 flex items-center justify-center overflow-hidden">
-              {user?.profileImage ? (
+              {user?.profileImage && user.profileImage.length > 0 ? (
                 <Image
                   src={user.profileImage}
                   alt="Profile"
@@ -372,7 +389,14 @@ export default function Playground() {
                   height={300}
                   className="w-full h-full object-cover"
                 />
-              ) : null}
+              ) : (
+                <Image
+                  src={"/uploads/person.png"}
+                  alt="Profile"
+                  width={500}
+                  height={300}
+                />
+              )}
             </span>
             {user?.name}
           </h2>
@@ -383,7 +407,6 @@ export default function Playground() {
             className="w-full justify-start mb-2"
             onClick={() => {
               setActiveTab("generate");
-              setEditingPostId(null);
             }}
           >
             <PenLine className="mr-2 h-4 w-4" /> Generate Post
@@ -394,6 +417,13 @@ export default function Playground() {
             onClick={() => setActiveTab("posts")}
           >
             <FileText className="mr-2 h-4 w-4" /> Posts
+          </Button>
+          <Button
+            variant={activeTab === "calendar" ? "default" : "ghost"}
+            className="w-full justify-start mb-2"
+            onClick={() => setActiveTab("calendar")}
+          >
+            <CalendarIcon className="mr-2 h-4 w-4" /> Calendar
           </Button>
           <Button
             variant={activeTab === "settings" ? "default" : "ghost"}
@@ -421,6 +451,8 @@ export default function Playground() {
               ? "Generate Post"
               : activeTab === "posts"
               ? "Posts"
+              : activeTab === "calendar"
+              ? "Calendar"
               : "Settings"}
           </h1>
           <div className="flex items-center space-x-4"></div>
@@ -433,6 +465,7 @@ export default function Playground() {
               handleGenerateTopics={handleGenerateTopics}
               handleGeneratePost={handleGeneratePost}
               topics={topics}
+              handleSchedulePost={handleSchedulePost}
             />
           )}
 
@@ -441,9 +474,11 @@ export default function Playground() {
               posts={posts}
               handleUpdatePost={handleUpdatePost}
               handleDeletePost={handleDeletePost}
-              updateEditingPostId={setEditingPostId}
-              editingPostId={editingPostId}
             />
+          )}
+
+          {activeTab === "calendar" && (
+            <ContentCalendar scheduledPosts={scheduledPosts} />
           )}
 
           {activeTab === "settings" && (

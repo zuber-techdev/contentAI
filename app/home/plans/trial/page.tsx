@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/app/contexts/auth-context";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,6 +15,8 @@ import { useRouter } from "next/navigation";
 
 export default function FreeTrial() {
   const router = useRouter();
+  const { updateUserPersonaStatus } = useAuth();
+
   return (
     <Card className="max-w-2xl mx-auto">
       <CardHeader>
@@ -69,6 +72,7 @@ export default function FreeTrial() {
         <Button
           className="w-full text-lg py-6"
           onClick={() => {
+            updateUserPersonaStatus();
             router.push("/home");
           }}
         >

@@ -29,7 +29,7 @@ export async function generatePostHandler(
       const tone = req.body.tone || "";
       const platform = req.body.platform || "";
       if (!topic) {
-        return res.status(400).json({ message: "topic is required" });
+        return res.status(400).json({ message: "Topic is required" });
       }
       const post = await generatePost(userId, topic, industry, tone, platform);
       res.status(200).json({ post });

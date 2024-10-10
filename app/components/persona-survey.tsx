@@ -174,7 +174,6 @@ export default function PersonaSurvey() {
       return;
     }
 
-    console.log("Survey completed:", surveyResults);
     setError(null);
     setIsGenerating(true);
     try {

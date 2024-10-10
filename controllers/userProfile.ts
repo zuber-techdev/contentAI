@@ -32,9 +32,7 @@ export async function updateUserProfileHandler(
         res.status(200).json({
           message: "Profile updated successfully",
           token,
-          profileImage: profileImage
-            ? `/public/uploads/${profileImage.filename}`
-            : "",
+          profileImage: profileImage ? `/uploads/${profileImage.filename}` : "",
         });
       });
     } catch (error) {

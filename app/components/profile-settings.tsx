@@ -19,7 +19,7 @@ type ProfileSettings = {
 interface ProfileSettingsProps {
   persona: string;
   handleSavePersona: (personaString: string) => Promise<void>;
-  handleSaveProfile: (formData: FormData) => Promise<void>;
+  handleSaveProfile: (formData: FormData) => Promise<any>;
 }
 
 export default function ProfileSettings({
@@ -73,7 +73,11 @@ export default function ProfileSettings({
       password: "",
       confirmPassword: "",
     });
-    setProfileImage(user?.profileImage || null);
+    setProfileImage(
+      user?.profileImage && user.profileImage.length > 0
+        ? user.profileImage
+        : null
+    );
   };
 
   const onSaveProfile = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -96,7 +100,8 @@ export default function ProfileSettings({
     if (fileInputRef.current?.files?.[0]) {
       formData.append("profileImage", fileInputRef.current.files[0]);
     }
-    await handleSaveProfile(formData);
+    const data = await handleSaveProfile(formData);
+    if (data.status === "failure") setProfileImage(null);
     setIsEditingProfile(false);
   };
 

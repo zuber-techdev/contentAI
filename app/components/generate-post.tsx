@@ -9,7 +9,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Loader2 } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  FileText,
+  Loader2,
+} from "lucide-react";
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -20,6 +26,12 @@ import {
 } from "@/components/ui/tooltip";
 import Image from "next/image";
 import { useAuth } from "../contexts/auth-context";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { ScheduledPost } from "./playground";
 
 interface GeneratePostProps {
   activeTab: string;
@@ -27,6 +39,31 @@ interface GeneratePostProps {
   topics: string[];
   handleGenerateTopics: () => Promise<void>;
   handleGeneratePost: (requestBody: any) => Promise<string>;
+  handleSchedulePost: (newPost: ScheduledPost) => void;
+}
+
+const daysOfWeek = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+const months = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+function getDaysInMonth(year: number, month: number) {
+  return new Date(year, month + 1, 0).getDate();
+}
+
+function getFirstDayOfMonth(year: number, month: number) {
+  return new Date(year, month, 1).getDay();
 }
 
 export default function GeneratePost({
@@ -35,16 +72,34 @@ export default function GeneratePost({
   topics,
   handleGenerateTopics,
   handleGeneratePost,
+  handleSchedulePost,
 }: GeneratePostProps) {
   const [error, setError] = useState<string | null>(null);
   const [selectedTopic, setSelectedTopic] = useState("");
   const [selectedIndustry, setSelectedIndustry] = useState("");
   const [selectedTone, setSelectedTone] = useState("");
   const [selectedPlatform, setSelectedPlatform] = useState("");
+  const [numberOfPosts, setNumberOfPosts] = useState(1);
   const [isGeneratingTopics, setIsGeneratingTopics] = useState(false);
   const [isGeneratingPost, setIsGeneratingPost] = useState(false);
+  const [isScheduleOpen, setIsScheduleOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [currentMonth, setCurrentMonth] = useState(selectedDate.getMonth());
+  const [currentYear, setCurrentYear] = useState(selectedDate.getFullYear());
   const [generatedPost, setGeneratedPost] = useState("");
   const { user } = useAuth();
+
+  const onSchedulePost = () => {
+    if (selectedDate) {
+      const newPost: ScheduledPost = {
+        id: Date.now().toString(),
+        content: generatedPost,
+        date: selectedDate.toISOString(),
+      };
+      handleSchedulePost(newPost);
+      setIsScheduleOpen(false);
+    }
+  };
 
   const onSavePost = async () => {
     await handleSavePost({
@@ -79,6 +134,54 @@ export default function GeneratePost({
     setIsGeneratingPost(false);
   };
 
+  const handlePrevMonth = () => {
+    setCurrentMonth((prev) => (prev === 0 ? 11 : prev - 1));
+    if (currentMonth === 0) {
+      setCurrentYear((prev) => prev - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    setCurrentMonth((prev) => (prev === 11 ? 0 : prev + 1));
+    if (currentMonth === 11) {
+      setCurrentYear((prev) => prev + 1);
+    }
+  };
+
+  const handleDateClick = (day: number) => {
+    setSelectedDate(new Date(currentYear, currentMonth, day));
+  };
+
+  const renderCalendar = () => {
+    const daysInMonth = getDaysInMonth(currentYear, currentMonth);
+    const firstDayOfMonth = getFirstDayOfMonth(currentYear, currentMonth);
+    const days = [];
+
+    for (let i = 0; i < firstDayOfMonth; i++) {
+      days.push(<div key={`empty-${i}`} className="w-8 h-8"></div>);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const isSelected =
+        selectedDate.getDate() === day &&
+        selectedDate.getMonth() === currentMonth &&
+        selectedDate.getFullYear() === currentYear;
+      days.push(
+        <button
+          key={day}
+          onClick={() => handleDateClick(day)}
+          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm
+                      ${
+                        isSelected ? "bg-black text-white" : "hover:bg-gray-200"
+                      }`}
+        >
+          {day}
+        </button>
+      );
+    }
+
+    return days;
+  };
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-screen">
@@ -203,6 +306,16 @@ export default function GeneratePost({
               </div>
             </TabsContent>
           </Tabs>
+          <div className="mt-4 flex items-center space-x-2">
+            <Input
+              type="number"
+              min="1"
+              value={numberOfPosts}
+              onChange={(e) => setNumberOfPosts(parseInt(e.target.value))}
+              className="w-20"
+            />
+            <span>Number of posts to generate</span>
+          </div>
           <Button
             className="w-full mt-4 bg-pink-500 hover:bg-pink-600"
             onClick={onGeneratePost}
@@ -221,7 +334,7 @@ export default function GeneratePost({
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center space-x-2">
                 <span className="w-8 h-8 bg-pink-500 rounded-full">
-                  {user?.profileImage ? (
+                  {user?.profileImage && user.profileImage.length > 0 ? (
                     <Image
                       src={user.profileImage}
                       alt="Profile"
@@ -229,7 +342,14 @@ export default function GeneratePost({
                       height={300}
                       className="w-full h-full object-cover"
                     />
-                  ) : null}
+                  ) : (
+                    <Image
+                      src={"/uploads/person.png"}
+                      alt="Profile"
+                      width={500}
+                      height={300}
+                    />
+                  )}
                 </span>
                 <span className="font-semibold">AI Generated</span>
               </div>
@@ -246,6 +366,51 @@ export default function GeneratePost({
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
+                <Popover open={isScheduleOpen} onOpenChange={setIsScheduleOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline">
+                      <Clock className="mr-2 h-4 w-4" />
+                      Schedule
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <div className="p-4 w-64">
+                      <div className="flex justify-between items-center mb-4">
+                        <button
+                          onClick={handlePrevMonth}
+                          className="p-1 rounded-full hover:bg-gray-200"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </button>
+                        <div className="font-semibold">
+                          {months[currentMonth]} {currentYear}
+                        </div>
+                        <button
+                          onClick={handleNextMonth}
+                          className="p-1 rounded-full hover:bg-gray-200"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-7 gap-1 mb-2">
+                        {daysOfWeek.map((day) => (
+                          <div
+                            key={day}
+                            className="text-center text-sm font-medium text-gray-500"
+                          >
+                            {day}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-7 gap-1">
+                        {renderCalendar()}
+                      </div>
+                      <Button onClick={onSchedulePost} className="w-full mt-4">
+                        Confirm Schedule
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
             <Textarea

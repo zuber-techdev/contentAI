@@ -25,6 +25,9 @@ interface AuthContextType {
     profileImage: string
   ) => Promise<boolean>;
   logout: () => void;
+  updateUserPersonaStatus: () => void;
+  updateUserProfileImage: (newProfileImage: string) => void;
+  updateUserToken: (newToken: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -99,8 +102,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   };
 
+  const updateUserPersonaStatus = () => {
+    localStorage.setItem("isPersonaAvailable", JSON.stringify(true));
+    if (user) setUser({ ...user, isPersonaAvailable: true });
+  };
+
+  const updateUserProfileImage = (newPofileImage: string) => {
+    localStorage.setItem("profileImage", newPofileImage);
+    if (user) setUser({ ...user, profileImage: newPofileImage });
+  };
+
+  const updateUserToken = (newToken: string) => {
+    localStorage.setItem("authToken", newToken);
+    const payload = JSON.parse(atob(newToken.split(".")[1]));
+    if (user)
+      setUser({
+        ...user,
+        userId: payload.userId,
+        name: payload.name,
+        email: payload.email,
+        isAdmin: payload.isAdmin,
+      });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        logout,
+        updateUserPersonaStatus,
+        updateUserProfileImage,
+        updateUserToken,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

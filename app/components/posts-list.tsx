@@ -13,23 +13,21 @@ import { Post } from "./playground";
 import { formatDistance } from "date-fns";
 import { useState } from "react";
 import { useAuth } from "../contexts/auth-context";
+import { Badge } from "@/components/ui/badge";
 
 interface PostsListProps {
   posts: Post[];
-  handleUpdatePost: (requestBody: any) => Promise<void>;
+  handleUpdatePost: (requestBody: any, postId: string) => Promise<void>;
   handleDeletePost: (postId: string) => Promise<void>;
-  editingPostId: string | null;
-  updateEditingPostId: (id: string | null) => void;
 }
 
 export default function PostsList({
   posts,
   handleUpdatePost,
   handleDeletePost,
-  editingPostId,
-  updateEditingPostId,
 }: PostsListProps) {
   const [editedPost, setEditedPost] = useState("");
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const { user } = useAuth();
 
   const handleCopyPost = (post: Post) => {
@@ -37,22 +35,26 @@ export default function PostsList({
   };
 
   const handleEditPost = (post: Post) => {
-    updateEditingPostId(editingPostId === post.id ? null : post.id);
+    setEditingPostId(editingPostId === post.id ? null : post.id);
     setEditedPost(editingPostId === post.id ? "" : post.content);
   };
 
   const onUpatePost = async () => {
     const postToUpdate = posts.find((post) => post.id === editingPostId);
     if (!postToUpdate) throw new Error("Post not found");
-    await handleUpdatePost({
-      topic: postToUpdate.topic,
-      industry: postToUpdate.industry,
-      tone: postToUpdate.tone,
-      platform: postToUpdate.platform,
-      content: editedPost,
-    });
+    if (editingPostId)
+      await handleUpdatePost(
+        {
+          topic: postToUpdate.topic,
+          industry: postToUpdate.industry,
+          tone: postToUpdate.tone,
+          platform: postToUpdate.platform,
+          content: editedPost,
+        },
+        editingPostId
+      );
     setEditedPost("");
-    updateEditingPostId(null);
+    setEditingPostId(null);
   };
 
   const onDeletePost = async (postId: string) => {
@@ -79,13 +81,13 @@ export default function PostsList({
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleEditPost(post)}
+                          onClick={() => handleCopyPost(post)}
                         >
-                          <PenLine className="h-4 w-4" />
+                          <Copy className="h-4 w-4" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Edit</p>
+                        <p>Copy</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -95,13 +97,13 @@ export default function PostsList({
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleCopyPost(post)}
+                          onClick={() => handleEditPost(post)}
                         >
-                          <Copy className="h-4 w-4" />
+                          <PenLine className="h-4 w-4" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Copy</p>
+                        <p>Edit</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -143,7 +145,7 @@ export default function PostsList({
               <div className="bg-white rounded-lg shadow p-4 mb-4">
                 <div className="flex items-center mb-2">
                   <span className="w-12 h-12 bg-pink-500 rounded-full mr-4">
-                    {user?.profileImage ? (
+                    {user?.profileImage && user.profileImage.length > 0 ? (
                       <Image
                         src={user.profileImage}
                         alt="Profile"
@@ -151,10 +153,22 @@ export default function PostsList({
                         height={300}
                         className="w-full h-full object-cover"
                       />
-                    ) : null}
+                    ) : (
+                      <Image
+                        src={"/uploads/person.png"}
+                        alt="Profile"
+                        width={500}
+                        height={300}
+                      />
+                    )}
                   </span>
                   <div>
-                    <h3 className="font-bold">{user?.name}</h3>
+                    <div className="flex space-x-2 items-center">
+                      <h3 className="font-bold">{user?.name}</h3>
+                      {!post.scheduledAt ? (
+                        <Badge variant="destructive">Unscheduled</Badge>
+                      ) : null}
+                    </div>
                     <p className="text-sm text-gray-500">
                       • {formatDistance(new Date(), post.createdAt)} ago
                     </p>
