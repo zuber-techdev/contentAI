@@ -1,11 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Camera, Edit, Trash2 } from "lucide-react";
+import { Camera, Edit, Trash2, RefreshCcw, CircleX } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
+import PersonaSurvey from "./persona-survey";
 
 type ProfileSettings = {
   firstName: string;
@@ -18,11 +19,13 @@ type ProfileSettings = {
 interface ProfileSettingsProps {
   persona: string;
   handleSaveProfile: (formData: FormData) => Promise<any>;
+  handleUpdatePersona: (persona: string) => void;
 }
 
 export default function ProfileSettings({
   persona,
   handleSaveProfile,
+  handleUpdatePersona,
 }: ProfileSettingsProps) {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileSettings, setProfileSettings] = useState<ProfileSettings>({
@@ -33,6 +36,7 @@ export default function ProfileSettings({
     confirmPassword: "",
   });
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [isRecreatingPersona, setIsRecreatingPersona] = useState(false);
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -122,6 +126,14 @@ export default function ProfileSettings({
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+  };
+
+  const handleRefreshPersona = () => {
+    setIsRecreatingPersona(true);
+  };
+
+  const handleCancelRefreshPerson = () => {
+    setIsRecreatingPersona(false);
   };
 
   return (
@@ -278,10 +290,33 @@ export default function ProfileSettings({
         <CardHeader>
           <CardTitle className="flex justify-between items-center">
             Persona Settings
+            {!isRecreatingPersona ? (
+              <RefreshCcw
+                className="h-4 w-4 text-gray-500"
+                onClick={handleRefreshPersona}
+              />
+            ) : (
+              <CircleX
+                className="h-4 w-4 text-red-500"
+                onClick={handleCancelRefreshPerson}
+              />
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-900">{persona}</p>
+          {!isRecreatingPersona ? (
+            <p className="text-gray-900">{persona}</p>
+          ) : (
+            <>
+              <PersonaSurvey
+                editPersona={true}
+                handleUpdatePersona={(persona: string) => {
+                  handleUpdatePersona(persona);
+                  setIsRecreatingPersona(false);
+                }}
+              />
+            </>
+          )}
         </CardContent>
       </Card>
     </div>

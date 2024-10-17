@@ -10,6 +10,7 @@ import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { authFetch } from "../utils/authFetch";
 import { PersonaPreview } from "./persona-preview";
+import { Textarea } from "@/components/ui/textarea";
 
 type QuestionType = "text" | "textarea" | "radio" | "single_choice" | "mcq";
 
@@ -18,6 +19,7 @@ interface Question {
   question: string;
   type: QuestionType;
   options?: string[];
+  example?: string;
 }
 
 interface SurveyResult {
@@ -25,7 +27,15 @@ interface SurveyResult {
   answer: string;
 }
 
-export default function PersonaSurvey() {
+interface PersonaSurveyProps {
+  editPersona: boolean;
+  handleUpdatePersona?: (persona: string) => void;
+}
+
+export default function PersonaSurvey({
+  editPersona,
+  handleUpdatePersona,
+}: PersonaSurveyProps) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -54,6 +64,7 @@ export default function PersonaSurvey() {
         question: question.question,
         type: question.questionType,
         options: question.options ? Object.values(question.options) : undefined,
+        example: question.example || undefined,
       }));
       setQuestions([...questions, ...questionsToAdd]);
       setSurveyResults(data.map(({ question }) => ({ question, answer: "" })));
@@ -199,8 +210,11 @@ export default function PersonaSurvey() {
     }
   };
 
-  const handleSavePersona = () => {
-    router.push("/home/plans/trial");
+  const handleSavePersona = (newPersona: string) => {
+    if (!editPersona) router.push("/home/plans/trial");
+    if (editPersona && handleUpdatePersona) {
+      handleUpdatePersona(newPersona);
+    }
   };
 
   const handleCancelPersona = () => {
@@ -224,11 +238,14 @@ export default function PersonaSurvey() {
             <Label htmlFor={`question-${currentQuestionNumber}`}>
               {currentQuestion.question}
             </Label>
-            <Input
+            <Textarea
               id={`question-${currentQuestionNumber}`}
               value={answer}
               onChange={handleInputChange}
             />
+            {currentQuestion.example && (
+              <p>Example: {currentQuestion.example}</p>
+            )}
           </div>
         );
       case "radio":

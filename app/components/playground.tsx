@@ -18,6 +18,7 @@ import GeneratePost from "./generate-post";
 import PostsList from "./posts-list";
 import { toast } from "@/hooks/use-toast";
 import ContentCalendar from "./content-calendar";
+import { useRouter } from "next/navigation";
 
 type TabTypes = "generate" | "posts" | "settings" | "calendar";
 
@@ -28,7 +29,7 @@ export type Post = {
   topic: string;
   industry: string;
   tone: string;
-  platform: string;
+  platform: "Facebook" | "Twitter" | "LinkedIn" | "Instagram";
   createdAt: string;
   scheduleDate?: string;
   isCanceled?: boolean;
@@ -43,6 +44,8 @@ export default function Playground() {
   const [activeTab, setActiveTab] = useState<TabTypes>("generate");
 
   const { user, logout, updateUserProfileImage, updateUserToken } = useAuth();
+
+  const router = useRouter();
 
   useEffect(() => {
     if (posts.length === 0) fetchPosts();
@@ -423,7 +426,13 @@ export default function Playground() {
       <div className="w-64 bg-white shadow-md">
         <div className="p-4 border-b">
           <h2 className="text-xl font-semibold flex items-center">
-            <span className="w-8 h-8 bg-pink-500 rounded-md mr-2 flex items-center justify-center overflow-hidden">
+            <span
+              className={`w-8 h-8 rounded-md mr-2 flex items-center justify-center overflow-hidden ${
+                !user?.profileImage || user.profileImage.length === 0
+                  ? "bg-pink-500"
+                  : ""
+              }`}
+            >
               {user?.profileImage && user.profileImage.length > 0 ? (
                 <Image
                   src={user.profileImage}
@@ -498,7 +507,18 @@ export default function Playground() {
               ? "Calendar"
               : "Settings"}
           </h1>
-          <div className="flex items-center space-x-4"></div>
+          <div className="flex items-center space-x-4">
+            <div className="bg-pink-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+              Free Trial
+            </div>
+            <Button
+              variant="default"
+              className="bg-pink-500 hover:bg-pink-600"
+              onClick={() => router.push("/home/plans/pricing")}
+            >
+              Upgrade to Pro
+            </Button>
+          </div>
         </header>
         <main className="p-6 space-y-8">
           {activeTab === "generate" && (
@@ -530,6 +550,7 @@ export default function Playground() {
             <ProfileSettings
               persona={persona}
               handleSaveProfile={handleSaveProfile}
+              handleUpdatePersona={setPersona}
             />
           )}
         </main>

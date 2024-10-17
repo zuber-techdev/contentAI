@@ -25,8 +25,8 @@ import { authFetch } from "../utils/authFetch";
 
 type QuestionType =
   | "Input text"
-  | "Single Choice"
-  | "Multiple Choices"
+  | "Single Select"
+  | "Multiple Select"
   | "Yes/No";
 
 interface Question {
@@ -34,6 +34,7 @@ interface Question {
   text: string;
   type: QuestionType;
   options?: string[];
+  example?: string;
 }
 
 export default function QuestionManagement() {
@@ -44,6 +45,7 @@ export default function QuestionManagement() {
   const [newQuestionType, setNewQuestionType] =
     useState<QuestionType>("Input text");
   const [newOptions, setNewOptions] = useState("");
+  const [newExample, setNewExample] = useState("");
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
 
   useEffect(() => {
@@ -65,22 +67,25 @@ export default function QuestionManagement() {
           text: question.question,
           type:
             question.questionType === "single_choice"
-              ? "Single Choice"
+              ? "Single Select"
               : question.questionType === "radio"
               ? "Yes/No"
               : question.questionType === "mcq"
-              ? "Multiple Choices"
+              ? "Multiple Select"
               : "Input text",
         };
         if (question.options) {
           questionToAdd.options = Object.values(question.options);
+        }
+        if (question.example) {
+          questionToAdd.example = question.example;
         }
         return questionToAdd;
       });
       setQuestions([...questions, ...questionsToAdd]);
     } catch (err) {
       setError(
-        "An error occurred while fetching questions. Please try again later."
+        `An error occurred while fetching questions. ${err} Please try again later.`
       );
       console.error("Error fetching questions:", err);
     } finally {
@@ -92,11 +97,11 @@ export default function QuestionManagement() {
     switch (type) {
       case "Input text":
         return "text";
-      case "Single Choice":
+      case "Single Select":
         return "single_choice";
       case "Yes/No":
         return "radio";
-      case "Multiple Choices":
+      case "Multiple Select":
         return "mcq";
       default:
         return "text";
@@ -111,10 +116,14 @@ export default function QuestionManagement() {
         questionType: mapQuestionType(newQuestionType),
         status: 1,
         options: null,
+        example: null,
       };
+      if (newQuestionType === "Input text") {
+        questionToAdd.example = newExample;
+      }
       if (
-        (newQuestionType === "Single Choice" ||
-          newQuestionType === "Multiple Choices") &&
+        (newQuestionType === "Single Select" ||
+          newQuestionType === "Multiple Select") &&
         newOptions
       ) {
         const optionsArray = newOptions
@@ -149,9 +158,9 @@ export default function QuestionManagement() {
           text: addedQuestion.question,
           type:
             addedQuestion.questionType === "single_choice"
-              ? "Single Choice"
+              ? "Single Select"
               : addedQuestion.questionType === "mcq"
-              ? "Multiple Choices"
+              ? "Multiple Select"
               : addedQuestion.questionType === "radio"
               ? "Yes/No"
               : "Input text",
@@ -159,9 +168,13 @@ export default function QuestionManagement() {
         if (addedQuestion.options) {
           questionToAddToState.options = Object.values(addedQuestion.options);
         }
+        if (addedQuestion.example) {
+          questionToAddToState.example = addedQuestion.example;
+        }
         setQuestions([...questions, questionToAddToState]);
         setNewQuestion("");
         setNewOptions("");
+        setNewExample("");
       } catch (error) {
         console.error("Error adding question:", error);
         setError(
@@ -209,11 +222,12 @@ export default function QuestionManagement() {
         questionType: mapQuestionType(editingQuestion.type),
         status: 1,
         options: null,
+        example: null,
       };
 
       if (
-        (editingQuestion.type === "Single Choice" ||
-          editingQuestion.type === "Multiple Choices") &&
+        (editingQuestion.type === "Single Select" ||
+          editingQuestion.type === "Multiple Select") &&
         editingQuestion.options
       ) {
         questionToUpdate.options = editingQuestion.options.reduce(
@@ -230,6 +244,9 @@ export default function QuestionManagement() {
           option1: "Yes",
           option2: "No",
         };
+      }
+      if (editingQuestion.type === "Input text") {
+        questionToUpdate.example = editingQuestion.example;
       }
 
       const response = await authFetch(`/api/questions/${editingQuestion.id}`, {
@@ -253,14 +270,17 @@ export default function QuestionManagement() {
                 text: updatedQuestion.question,
                 type:
                   updatedQuestion.questionType === "single_choice"
-                    ? "Single Choice"
+                    ? "Single Select"
                     : updatedQuestion.questionType === "mcq"
-                    ? "Multiple Choices"
+                    ? "Multiple Select"
                     : updatedQuestion.questionType === "radio"
                     ? "Yes/No"
                     : "Input text",
                 options: updatedQuestion.options
                   ? Object.values(updatedQuestion.options)
+                  : undefined,
+                example: updatedQuestion.example
+                  ? updatedQuestion.example
                   : undefined,
               }
             : q
@@ -312,15 +332,26 @@ export default function QuestionManagement() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Input text">Input text</SelectItem>
-              <SelectItem value="Single Choice">Single Choice</SelectItem>
+              <SelectItem value="Single Select">Single Select</SelectItem>
               <SelectItem value="Yes/No">Yes/No</SelectItem>
-              <SelectItem value="Multiple Choices">Multiple Choices</SelectItem>
+              <SelectItem value="Multiple Select">Multiple Select</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
-      {(newQuestionType === "Single Choice" ||
-        newQuestionType === "Multiple Choices") && (
+      {newQuestionType === "Input text" && (
+        <div>
+          <Label htmlFor="example">Example</Label>
+          <Input
+            id="example"
+            value={newExample}
+            placeholder="Enter an example of response"
+            onChange={(e) => setNewExample(e.target.value)}
+          />
+        </div>
+      )}
+      {(newQuestionType === "Single Select" ||
+        newQuestionType === "Multiple Select") && (
         <div>
           <Label htmlFor="options">Options (comma-separated)</Label>
           <Input
@@ -337,7 +368,7 @@ export default function QuestionManagement() {
           <TableRow>
             <TableHead className="w-[44%]">Question</TableHead>
             <TableHead className="w-[15%]">Type</TableHead>
-            <TableHead className="w-[40%]">Options</TableHead>
+            <TableHead className="w-[40%]">Options/Examples</TableHead>
             <TableHead className="w-[1%]">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -379,12 +410,12 @@ export default function QuestionManagement() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Input text">Input text</SelectItem>
-                      <SelectItem value="Single Choice">
-                        Single Choice
+                      <SelectItem value="Single Select">
+                        Single Select
                       </SelectItem>
                       <SelectItem value="Yes/No">Yes/No</SelectItem>
-                      <SelectItem value="Multiple Choices">
-                        Multiple Choices
+                      <SelectItem value="Multiple Select">
+                        Multiple Select
                       </SelectItem>
                     </SelectContent>
                   </Select>
@@ -394,8 +425,8 @@ export default function QuestionManagement() {
               </TableCell>
               <TableCell>
                 {editingQuestion?.id === question.id &&
-                (editingQuestion.type === "Single Choice" ||
-                  editingQuestion.type === "Multiple Choices") ? (
+                (editingQuestion.type === "Single Select" ||
+                  editingQuestion.type === "Multiple Select") ? (
                   <Input
                     value={editingQuestion.options?.join(", ") || ""}
                     onChange={(e) =>
@@ -408,9 +439,20 @@ export default function QuestionManagement() {
                   />
                 ) : editingQuestion?.id === question.id &&
                   editingQuestion.type === "Input text" ? (
-                  "-"
+                  <Input
+                    value={editingQuestion.example}
+                    onChange={(e) =>
+                      setEditingQuestion({
+                        ...editingQuestion,
+                        example: e.target.value,
+                      })
+                    }
+                    placeholder="Enter an example of response"
+                  />
                 ) : question.options ? (
                   question.options.join(", ")
+                ) : question.example ? (
+                  question.example
                 ) : (
                   "-"
                 )}

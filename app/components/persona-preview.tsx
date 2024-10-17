@@ -7,7 +7,7 @@ import { authFetch } from "../utils/authFetch";
 
 interface PersonaPreviewProps {
   persona: string;
-  onSave: () => void;
+  onSave: (newPersona: string) => void;
   onCancel: () => void;
 }
 
@@ -35,7 +35,7 @@ export function PersonaPreview({
         throw new Error("Failed to save persona");
       }
 
-      onSave();
+      onSave(editedPersona);
     } catch (err) {
       console.error("Error saving persona:", err);
       setError("Failed to save persona. Please try again.");

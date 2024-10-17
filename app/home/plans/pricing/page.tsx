@@ -12,6 +12,9 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { CheckCircle2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import CheckoutButton from "@/components/ui/CheckoutButton";
+
+const stripePublicKey = "price_1Q7AktG8swv4YdckPdweLEZB";
 
 export default function ProPlan() {
   const [isYearly, setIsYearly] = useState(false);
@@ -23,13 +26,13 @@ export default function ProPlan() {
     <div className="container mx-auto py-10">
       <Card className="max-w-2xl mx-auto">
         <CardHeader className="space-y-6">
-          <Link
-            href="/home/plans/trial"
+          <button
+            onClick={() => window.history.back()}
             className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Free Plan
-          </Link>
+            {/* Back to Free Plan */}
+          </button>
           <CardTitle className="text-4xl font-bold text-center">
             Plan Pricing
           </CardTitle>
@@ -72,7 +75,8 @@ export default function ProPlan() {
           </div>
         </CardContent>
         <CardFooter>
-          <Button className="w-full text-lg py-6">Start Plan</Button>
+          {/* <Button className="w-full text-lg py-6">Start Plan</Button> */}
+          <CheckoutButton priceId={stripePublicKey} />
         </CardFooter>
       </Card>
     </div>

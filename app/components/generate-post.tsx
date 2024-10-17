@@ -9,7 +9,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Loader2 } from "lucide-react";
+import {
+  Facebook,
+  FileText,
+  Instagram,
+  Linkedin,
+  Loader2,
+  Twitter,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -21,6 +28,9 @@ import {
 import Image from "next/image";
 import { useAuth } from "../contexts/auth-context";
 import SchedulePost from "./schedule-post";
+
+type Platform = "Facebook" | "Twitter" | "LinkedIn" | "Instagram";
+type Style = "Concise" | "Detailed" | "Persuasive" | "Creative";
 
 interface GeneratePostProps {
   handleSavePost: (requestBody: any) => Promise<void>;
@@ -39,11 +49,15 @@ export default function GeneratePost({
   const [selectedTopic, setSelectedTopic] = useState("");
   const [selectedIndustry, setSelectedIndustry] = useState("");
   const [selectedTone, setSelectedTone] = useState("");
-  const [selectedPlatform, setSelectedPlatform] = useState("");
+  const [selectedPlatform, setSelectedPlatform] =
+    useState<Platform>("Facebook");
+  const [selectedStyle, setSelectedStyle] = useState<Style>("Concise");
   const [noOfPosts, setNoOfPosts] = useState(1);
   const [isGeneratingTopics, setIsGeneratingTopics] = useState(false);
   const [isGeneratingPost, setIsGeneratingPost] = useState(false);
-  const [generatedPosts, setGeneratedPosts] = useState<{ post: string }[]>([]);
+  const [generatedPosts, setGeneratedPosts] = useState<
+    { post: string; platform: Platform }[]
+  >([]);
   const [scheduleStates, setScheduleStates] = useState<
     {
       isOpen: boolean;
@@ -56,13 +70,15 @@ export default function GeneratePost({
   const { user } = useAuth();
 
   useEffect(() => {
-    const newStates = generatedPosts.map(() => ({
-      isOpen: false,
-      selectedDate: new Date(),
-      currentMonth: new Date().getMonth(),
-      currentYear: new Date().getFullYear(),
-    }));
-    setScheduleStates(newStates);
+    if (generatedPosts && generatedPosts.length > 0) {
+      const newStates = generatedPosts.map(() => ({
+        isOpen: false,
+        selectedDate: new Date(),
+        currentMonth: new Date().getMonth(),
+        currentYear: new Date().getFullYear(),
+      }));
+      setScheduleStates(newStates);
+    }
   }, [generatedPosts]);
 
   const onSchedulePost = (index: number) => {
@@ -92,7 +108,7 @@ export default function GeneratePost({
         setSelectedTopic("");
         setSelectedIndustry("");
         setSelectedTone("");
-        setSelectedPlatform("");
+        setSelectedPlatform("Facebook");
       }
     } catch (err) {
       console.error("Error saving post: ", err);
@@ -112,10 +128,75 @@ export default function GeneratePost({
       industry: selectedIndustry,
       tone: selectedTone,
       platform: selectedPlatform,
+      style: selectedStyle,
       noOfPosts,
     });
-    setGeneratedPosts(posts);
+    setGeneratedPosts(
+      posts.map((post) => ({ post: post.post, platform: selectedPlatform }))
+    );
     setIsGeneratingPost(false);
+  };
+
+  const PlatformStyleSelector = () => (
+    <div className="space-y-4">
+      <div>
+        <label
+          htmlFor="platform"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Platform
+        </label>
+        <Select
+          value={selectedPlatform}
+          onValueChange={(value: Platform) => setSelectedPlatform(value)}
+        >
+          <SelectTrigger id="platform">
+            <SelectValue placeholder="Choose a platform" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Facebook">Facebook</SelectItem>
+            <SelectItem value="Twitter">Twitter</SelectItem>
+            <SelectItem value="LinkedIn">LinkedIn</SelectItem>
+            <SelectItem value="Instagram">Instagram</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <label
+          htmlFor="style"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Style
+        </label>
+        <Select
+          value={selectedStyle}
+          onValueChange={(value: Style) => setSelectedStyle(value)}
+        >
+          <SelectTrigger id="style">
+            <SelectValue placeholder="Choose a style" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Concise">Concise</SelectItem>
+            <SelectItem value="Detailed">Detailed</SelectItem>
+            <SelectItem value="Persuasive">Persuasive</SelectItem>
+            <SelectItem value="Creative">Creative</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+
+  const getPlatformIcon = (platform: Platform) => {
+    switch (platform) {
+      case "Facebook":
+        return <Facebook className="h-4 w-4" />;
+      case "Twitter":
+        return <Twitter className="h-4 w-4" />;
+      case "LinkedIn":
+        return <Linkedin className="h-4 w-4" />;
+      case "Instagram":
+        return <Instagram className="h-4 w-4" />;
+    }
   };
 
   if (error) {
@@ -181,6 +262,7 @@ export default function GeneratePost({
                   Generate Topic Ideas
                 </Button>
               </div>
+              <PlatformStyleSelector />
             </TabsContent>
             <TabsContent value="custom" className="space-y-4">
               <div>
@@ -222,27 +304,7 @@ export default function GeneratePost({
                   onChange={(event) => setSelectedTopic(event.target.value)}
                 />
               </div>
-              <div>
-                <label
-                  htmlFor="postType"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Type of Post
-                </label>
-                <Select
-                  value={selectedPlatform}
-                  onValueChange={setSelectedPlatform}
-                >
-                  <SelectTrigger id="postType">
-                    <SelectValue placeholder="Choose a post type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="blog">Blog Post</SelectItem>
-                    <SelectItem value="social">Social Media Post</SelectItem>
-                    <SelectItem value="newsletter">Newsletter</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <PlatformStyleSelector />
             </TabsContent>
           </Tabs>
           <div className="mt-4 flex items-center space-x-2">
@@ -274,25 +336,12 @@ export default function GeneratePost({
             <CardContent className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center space-x-2">
-                  <span className="w-8 h-8 bg-pink-500 rounded-full">
-                    {user?.profileImage && user.profileImage.length > 0 ? (
-                      <Image
-                        src={user.profileImage}
-                        alt="Profile"
-                        width={500}
-                        height={300}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <Image
-                        src={"/uploads/person.png"}
-                        alt="Profile"
-                        width={500}
-                        height={300}
-                      />
-                    )}
+                  <div className="w-8 h-8 bg-pink-500 rounded-full flex items-center justify-center">
+                    {getPlatformIcon(generatedPost.platform)}
+                  </div>
+                  <span className="font-semibold">
+                    AI Generated ({generatedPost.platform})
                   </span>
-                  <span className="font-semibold">AI Generated</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <TooltipProvider>

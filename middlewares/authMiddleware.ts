@@ -4,34 +4,22 @@ import { verifyToken } from '../utils/jwt';
 export function authenticate(handler: NextApiHandler, requireAdmin: boolean = false) {
   return async (req: NextApiRequest, res: NextApiResponse) => {
     const authHeader = req.headers.authorization;
-
     if (!authHeader) {
       return res.status(401).json({ message: 'Authorization header missing' });
     }
-
     const token = authHeader.split(' ')[1]; // Extract token from "Bearer <token>"
-
     if (!token) {
       return res.status(401).json({ message: 'Token missing' });
     }
-
     try {
-      // Verify token
       const decoded = verifyToken(token);
-
       if (!decoded) {
         return res.status(401).json({ message: 'Invalid token' });
       }
-
-      // Attach user data to the request object
       req.user = decoded;
-
-      // If admin access is required, check for isAdmin flag
       if (requireAdmin && !(decoded as any).isAdmin) {
         return res.status(403).json({ message: 'Admin access required' });
       }
-
-      // Proceed with the request if the user is authenticated and authorized
       return handler(req, res);
     } catch (error) {
       if (error instanceof Error) {

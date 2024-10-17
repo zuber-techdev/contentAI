@@ -5,6 +5,7 @@ import {
   setMaxSubscription,
   terminateSubscription,
 } from "../services/subscriptionService";
+import {cancelSubscription} from "../services/stripeService";
 
 export async function createSubscriptionHandler(
   req: NextApiRequest,
@@ -100,3 +101,23 @@ export async function terminateSubscriptionHandler(
     res.status(405).json({ message: `Method ${req.method} Not Allowed` });
   }
 }
+
+export async function cancelSubscriptionHandler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method === "POST") {
+    try {
+      const { userId } = req.user as { userId: string };
+      const newSubscription = await cancelSubscription(userId);
+      res.status(201).json(newSubscription);
+    } catch (error) {
+      res
+        .status(400)
+        .json({
+          message: "Error terminating subscription",
+          error: (error as Error).message,
+        });
+    }
+  } else {
+    res.setHeader("Allow", ["PUT"]);
+    res.status(405).json({ message: `Method ${req.method} Not Allowed` });
+  }
+ }
