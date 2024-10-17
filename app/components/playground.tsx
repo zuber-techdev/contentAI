@@ -175,7 +175,7 @@ export default function Playground() {
       setPosts(
         data.map(
           ({
-            _id,
+            id: _id,
             userId,
             content,
             topic,
@@ -444,6 +444,7 @@ export default function Playground() {
             {user?.name}
           </h2>
         </div>
+        <CheckoutButton priceId={stripePublicKey}></CheckoutButton>
         <nav className="p-4">
           <Button
             variant={activeTab === "generate" ? "default" : "ghost"}

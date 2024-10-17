@@ -26,6 +26,7 @@ export async function createSubscription(data: SubscriptionInput) {
     planId,
     startDateTime,
     endDateTime,
+    stripeSubscriptionId: `random_${new Date()}`,
     status: subscriptionStatus.active,
   });
 

@@ -36,6 +36,12 @@ export async function authenticateUser(email: string, password: string) {
     throw new Error("User not found");
   }
 
+  const subscription:any = await Subscription.findOne({ userId: user._id });
+
+  if (subscription?.endDateTime < new Date()) {
+    throw new Error("Subscription expired");
+  }
+
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
     throw new Error("Invalid credentials");
