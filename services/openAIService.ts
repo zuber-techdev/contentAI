@@ -64,13 +64,14 @@ export async function generatePost(userId:string, topic: string, industry: strin
 		  ] 
 		  `;
 	  }else{
-		  userQuery = `Generate ${noOfPosts} social media posts on the topic of ${topic}. If no industry is provided, assume a general business context. The tone of the posts should default to informative, unless otherwise specified by the user. Each post should be written with a balanced style, adapting to whichever platform it fits best.If the user does not specify a platform, distribute posts across these platforms:
-			Facebook: Write engaging posts with a medium word count, suited for interaction and discussion.
-			Instagram: Keep the content concise and visually appealing, with an emphasis on catchy, attention-grabbing text.
-			LinkedIn: Use a professional and informative tone, offering insights that would resonate with a general business audience.
-			Twitter: Create short, impactful posts that deliver essential information within the character limit.
-		  Ensure the posts are engaging, add relevant emojis where appropriate, and follow the best practices for each platform. The content should not include any bold headings or start with "**". All tokens should be fully utilized.
-		  Return the posts in a JSON array of objects, where each object represents one post. Example format:
+		  userQuery = `Generate ${noOfPosts} social media posts on the topic of ${topic} for the ${platform} platform. If no industry is provided, assume a general business context. The tone of the posts should default to informative, unless otherwise specified by the user. Each post should be written with a balanced style, and the word count should be appropriate for ${platform}, following its best practices.
+		  For the ${platform} platform:
+		  Facebook: Write engaging posts with a medium word count, suited for interaction and discussion.
+		  Instagram: Keep the content concise and visually appealing, with an emphasis on catchy, attention-grabbing text.
+		  LinkedIn: Use a professional and informative tone, offering insights that would resonate with a general business audience.
+		  Twitter: Create short, impactful posts that deliver essential information within the character limit.
+		  Ensure the posts are engaging, add relevant emojis where appropriate, and follow the best practices for ${platform}. The content should not include any bold headings or start with "**". Use the full token count where possible.
+		  Return the posts in a JSON array of objects, where each object represents one post, following this format:
 		  [
 		  	{"post": "Generated post content here..."},
 			{"post": "Generated post content here..."},
