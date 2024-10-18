@@ -10,7 +10,15 @@ import {
   startOfMonth,
   subMonths,
 } from "date-fns";
-import { Ban, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Ban,
+  ChevronLeft,
+  ChevronRight,
+  Facebook,
+  Instagram,
+  Linkedin,
+  Twitter,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   Dialog,
@@ -68,6 +76,23 @@ export default function ContentCalendar({
     setScheduleStates(newStates);
   }, [scheduledPosts]);
 
+  const getPlatformColor = (
+    platform: "Facebook" | "Twitter" | "LinkedIn" | "Instagram"
+  ): string => {
+    switch (platform) {
+      case "Facebook":
+        return "bg-blue-500 text-white";
+      case "Twitter":
+        return "bg-gray-800 text-white";
+      case "LinkedIn":
+        return "bg-violet-600 text-white";
+      case "Instagram":
+        return "bg-pink-600 text-white";
+      default:
+        return "bg-gray-500 text-white";
+    }
+  };
+
   const renderCalendar = () => {
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(currentMonth);
@@ -121,9 +146,12 @@ export default function ContentCalendar({
             {dayPosts.map((post) => (
               <div
                 key={post.id}
-                className="mt-1 text-xs bg-pink-100 rounded p-1 truncate cursor-pointer hover:bg-pink-200"
+                className={`mt-1 text-xs rounded p-1 truncate cursor-pointer hover:opacity-80 flex items-center ${getPlatformColor(
+                  post.platform
+                )}`}
                 onClick={() => handleOpenContentViewer(post)}
               >
+                {getPlatformIcon(post.platform)}
                 {post.content.substring(0, 30)}...
               </div>
             ))}
@@ -196,6 +224,21 @@ export default function ContentCalendar({
     }
   };
 
+  const getPlatformIcon = (
+    platform: "Facebook" | "Twitter" | "LinkedIn" | "Instagram"
+  ) => {
+    switch (platform) {
+      case "Facebook":
+        return <Facebook className="h-4 w-4 mb-2 " />;
+      case "Twitter":
+        return <Twitter className="h-4 w-4 mb-2" />;
+      case "LinkedIn":
+        return <Linkedin className="h-4 w-4 mb-2" />;
+      case "Instagram":
+        return <Instagram className="h-4 w-4 mb-2" />;
+    }
+  };
+
   return (
     <>
       <Card>
@@ -235,26 +278,29 @@ export default function ContentCalendar({
       <Dialog open={isContentViewerOpen} onOpenChange={setIsContentViewerOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Scheduled Post</DialogTitle>
+            <DialogTitle>Scheduled Post </DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p className="text-sm text-gray-500 mb-2">
-              {selectedPost &&
-                selectedPost.createdAt &&
-                `Created At: ${format(
-                  parseISO(selectedPost.createdAt),
-                  "MMMM d, yyyy"
-                )}`}
-            </p>
-            <p className="text-sm text-gray-500 mb-2">
-              {selectedPost &&
-                selectedPost.scheduleDate &&
-                `Scheduled for: ${format(
-                  parseISO(selectedPost.scheduleDate),
-                  "MMMM d, yyyy"
-                )}`}
-            </p>
             <p className="min-h-[200px]">{selectedPost?.content || ""}</p>
+            <div className="flex flex-col mb-2 p-2 pl-0 rounded">
+              {selectedPost && getPlatformIcon(selectedPost.platform)}
+              <p className="text-sm text-gray-500 mb-2">
+                {selectedPost &&
+                  selectedPost.createdAt &&
+                  `Created At: ${format(
+                    parseISO(selectedPost.createdAt),
+                    "MMMM d, yyyy"
+                  )}`}
+              </p>
+              <p className="text-sm text-gray-500 mb-2">
+                {selectedPost &&
+                  selectedPost.scheduleDate &&
+                  `Scheduled for: ${format(
+                    parseISO(selectedPost.scheduleDate),
+                    "MMMM d, yyyy"
+                  )}`}
+              </p>
+            </div>
           </div>
           <DialogFooter className="sm:justify-between">
             <SchedulePost

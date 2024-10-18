@@ -48,6 +48,7 @@ export default function AuthComponent() {
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [registerError, setRegisterError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const router = useRouter();
 
@@ -71,6 +72,7 @@ export default function AuthComponent() {
   const handleLogin = async (values: LoginFormValues) => {
     setLoginError(null);
     try {
+      setLoading(true);
       const response = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -94,6 +96,8 @@ export default function AuthComponent() {
     } catch (error) {
       console.error("Login error:", error);
       setLoginError("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -205,7 +209,7 @@ export default function AuthComponent() {
                   )}
                 />
                 <Button className="w-full" type="submit">
-                  Login
+                  {loading ? "Logging in..." : "Login"}
                 </Button>
               </form>
             </Form>
@@ -286,7 +290,7 @@ export default function AuthComponent() {
                   )}
                 />
                 <Button className="w-full" type="submit">
-                  Register
+                  {loading ? "Registering..." : "Register"}
                 </Button>
               </form>
             </Form>

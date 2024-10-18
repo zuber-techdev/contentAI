@@ -193,7 +193,7 @@ export default function AnalyticsOverview() {
                 <Legend />
                 <Line
                   type="monotone"
-                  dataKey="count"
+                  dataKey="Count"
                   stroke="#8884d8"
                   activeDot={{ r: 8 }}
                 />

@@ -63,6 +63,7 @@ export default function FreeTrialMonitoring() {
   };
 
   const extendTrial = async (user: TrialUser) => {
+    setError(null);
     try {
       const response = await authFetch("/api/subscriptions/extend", {
         method: "PATCH",
@@ -97,6 +98,7 @@ export default function FreeTrialMonitoring() {
   };
 
   const terminateTrial = async (user: TrialUser) => {
+    setError(null);
     try {
       const response = await authFetch(`/api/subscriptions/terminate`, {
         method: "PATCH",
@@ -181,7 +183,9 @@ export default function FreeTrialMonitoring() {
               </TableCell> */}
               <TableCell>
                 <Button
-                  onClick={() => extendTrial(user)}
+                  onClick={() => {
+                    extendTrial(user);
+                  }}
                   variant="outline"
                   className="mr-2"
                   disabled={user.isTerminated}

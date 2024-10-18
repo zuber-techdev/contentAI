@@ -93,6 +93,7 @@ export default function UserManagement() {
 
   const handleSaveUser = async () => {
     if (!editingUser) return;
+    setError(null);
     try {
       const response = await authFetch("/api/update-user", {
         method: "PUT",
@@ -131,6 +132,7 @@ export default function UserManagement() {
   };
 
   const handleCancelEdit = () => {
+    setError(null);
     setEditingUser(null);
   };
 
@@ -196,12 +198,18 @@ export default function UserManagement() {
         <Input
           placeholder="Search users..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => {
+            setError(null);
+            setSearchTerm(e.target.value);
+          }}
           className="max-w-sm flex-1"
         />
         <Select
           value={filterPlan}
-          onValueChange={(value: PlanFilters) => setFilterPlan(value)}
+          onValueChange={(value: PlanFilters) => {
+            setError(null);
+            setFilterPlan(value);
+          }}
         >
           <SelectTrigger className="flex-1">
             <SelectValue placeholder="Filter by plan" />
@@ -214,7 +222,10 @@ export default function UserManagement() {
         </Select>
         <Select
           value={filterStatus}
-          onValueChange={(value: StatusFilter) => setFilterStatus(value)}
+          onValueChange={(value: StatusFilter) => {
+            setError(null);
+            setFilterStatus(value);
+          }}
         >
           <SelectTrigger className="flex-1">
             <SelectValue placeholder="Filter by status" />

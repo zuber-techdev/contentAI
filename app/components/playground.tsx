@@ -18,8 +18,10 @@ import GeneratePost from "./generate-post";
 import PostsList from "./posts-list";
 import { toast } from "@/hooks/use-toast";
 import ContentCalendar from "./content-calendar";
+import { useRouter } from "next/navigation";
+import PricingPlan from "./pricing-plan";
 
-type TabTypes = "generate" | "posts" | "settings" | "calendar";
+type TabTypes = "generate" | "posts" | "settings" | "calendar" | "subscribe";
 
 export type Post = {
   id: string;
@@ -28,7 +30,7 @@ export type Post = {
   topic: string;
   industry: string;
   tone: string;
-  platform: string;
+  platform: "Facebook" | "Twitter" | "LinkedIn" | "Instagram";
   createdAt: string;
   scheduleDate?: string;
   isCanceled?: boolean;
@@ -41,6 +43,9 @@ export default function Playground() {
   const [topics, setTopics] = useState<string[]>([]);
   const [persona, setPersona] = useState("");
   const [activeTab, setActiveTab] = useState<TabTypes>("generate");
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(
+    null
+  );
 
   const { user, logout, updateUserProfileImage, updateUserToken } = useAuth();
 
@@ -48,8 +53,26 @@ export default function Playground() {
     if (posts.length === 0) fetchPosts();
     if (topics.length === 0) fetchTopics();
     if (persona.length === 0) fetchPersona();
+    getSubscriptionStatus();
   }, []);
 
+  const getSubscriptionStatus = async () => {
+    try {
+      const response = await authFetch("/api/subscription-status");
+      if (!response.ok) {
+        throw new Error("Failed to fetch subscription status");
+      }
+      const data = await response.json();
+      setSubscriptionStatus(data.status);
+    } catch (err) {
+      console.error("Error fetching subscription status", err);
+      toast({
+        title: "Error",
+        description: "Failed to fetch subscription status. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
   const fetchTopics = async () => {
     try {
       const response = await authFetch("/api/get-custom-topics");
@@ -423,7 +446,13 @@ export default function Playground() {
       <div className="w-64 bg-white shadow-md">
         <div className="p-4 border-b">
           <h2 className="text-xl font-semibold flex items-center">
-            <span className="w-8 h-8 bg-pink-500 rounded-md mr-2 flex items-center justify-center overflow-hidden">
+            <span
+              className={`w-8 h-8 rounded-md mr-2 flex items-center justify-center overflow-hidden ${
+                !user?.profileImage || user.profileImage.length === 0
+                  ? "bg-pink-500"
+                  : ""
+              }`}
+            >
               {user?.profileImage && user.profileImage.length > 0 ? (
                 <Image
                   src={user.profileImage}
@@ -432,19 +461,11 @@ export default function Playground() {
                   height={300}
                   className="w-full h-full object-cover"
                 />
-              ) : (
-                <Image
-                  src={"/uploads/person.png"}
-                  alt="Profile"
-                  width={500}
-                  height={300}
-                />
-              )}
+              ) : null}
             </span>
             {user?.name}
           </h2>
         </div>
-        <CheckoutButton priceId={stripePublicKey}></CheckoutButton>
         <nav className="p-4">
           <Button
             variant={activeTab === "generate" ? "default" : "ghost"}
@@ -489,7 +510,7 @@ export default function Playground() {
       </div>
       {/* Main content */}
       <div className="flex-1 overflow-auto">
-        <header className="bg-white shadow-sm p-4 flex justify-between items-center">
+        <header className="bg-white shadow-sm p-4 pb-3 flex justify-between items-center">
           <h1 className="text-2xl font-semibold">
             {activeTab === "generate"
               ? "Generate Post"
@@ -497,9 +518,26 @@ export default function Playground() {
               ? "Posts"
               : activeTab === "calendar"
               ? "Calendar"
-              : "Settings"}
+              : activeTab === "settings"
+              ? "Settings"
+              : "Subscribe"}
           </h1>
-          <div className="flex items-center space-x-4"></div>
+          <div className="flex items-center space-x-4">
+            <div className="bg-pink-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+              {subscriptionStatus === "active"
+                ? "Upgraded to Pro"
+                : "Free Trial"}
+            </div>
+            {subscriptionStatus !== "active" ? (
+              <Button
+                variant="default"
+                className="bg-pink-500 hover:bg-pink-600"
+                onClick={() => setActiveTab("subscribe")}
+              >
+                Upgrade to Pro
+              </Button>
+            ) : null}
+          </div>
         </header>
         <main className="p-6 space-y-8">
           {activeTab === "generate" && (
@@ -531,6 +569,14 @@ export default function Playground() {
             <ProfileSettings
               persona={persona}
               handleSaveProfile={handleSaveProfile}
+              handleUpdatePersona={setPersona}
+            />
+          )}
+
+          {activeTab === "subscribe" && (
+            <PricingPlan
+              parent={true}
+              handleCancel={() => setActiveTab("generate")}
             />
           )}
         </main>

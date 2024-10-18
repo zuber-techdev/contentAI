@@ -171,8 +171,6 @@ export default function SchedulePost({
               <ChevronLeft className="h-4 w-4" />
             </button>
             <div className="font-semibold">
-              {/* {months[scheduleStates[generatedIndex].currentMonth]}{" "}
-              {scheduleStates[generatedIndex].currentYear} */}
               {months[currentState.currentMonth]} {currentState.currentYear}
             </div>
             <button

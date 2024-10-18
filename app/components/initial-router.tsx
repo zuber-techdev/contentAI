@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "../contexts/auth-context";
 import { Loader2 } from "lucide-react";
 
@@ -12,6 +12,7 @@ export default function InitialRouter({
 }) {
   const router = useRouter();
   const { user } = useAuth();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (user === null) {
@@ -19,6 +20,8 @@ export default function InitialRouter({
     } else if (user) {
       if (user.isAdmin) {
         router.push("/admin/dashboard");
+      } else if (pathname === "/success") {
+        router.push("/success");
       } else {
         router.push("/home");
       }
