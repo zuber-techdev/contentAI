@@ -27,5 +27,8 @@ export async function subscription_Status(userId: string) {
   await connectToDatabase();
   const subscription: any = await Subscription.findOne({ userId });
   const subStatus = await stripe.subscriptions.retrieve(subscription.stripeSubscriptionId);
+  if (!subStatus) { 
+    return { status: "Trial"}
+  }
   return {"status": subStatus.status};
 }

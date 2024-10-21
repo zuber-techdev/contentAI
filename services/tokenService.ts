@@ -30,7 +30,7 @@ export async function getMonthlyTokenUsage() {
   return {
     currentMonthTokens: currentTokens,
     lastMonthTokens: lastTokens,
-    percentageChange
+    percentageChange: Number(percentageChange.toFixed(2))
   };
 }
 
